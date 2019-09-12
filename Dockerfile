@@ -1,12 +1,12 @@
 FROM alpine:3.8 as protoc_builder
 RUN apk add --no-cache build-base curl automake autoconf libtool git zlib-dev
 
-ENV GRPC_VERSION=1.16.0 \
-        GRPC_JAVA_VERSION=1.16.1 \
+ENV GRPC_VERSION=1.23.0 \
+        GRPC_JAVA_VERSION=1.23.0 \
         GRPC_WEB_VERSION=1.0.0 \
-        PROTOBUF_VERSION=3.6.1 \
-        PROTOBUF_C_VERSION=1.3.1 \
-        PROTOC_GEN_DOC_VERSION=1.1.0 \
+        PROTOBUF_VERSION=3.9.1 \
+        PROTOBUF_C_VERSION=1.3.2 \
+        PROTOC_GEN_DOC_VERSION=1.3.0 \
         OUTDIR=/out
 RUN mkdir -p /protobuf && \
         curl -L https://github.com/google/protobuf/archive/v${PROTOBUF_VERSION}.tar.gz | tar xvz --strip-components=1 -C /protobuf
@@ -60,16 +60,16 @@ RUN go get -u -v -ldflags '-w -s' \
         github.com/gogo/protobuf/protoc-gen-gogofaster \
         github.com/gogo/protobuf/protoc-gen-gogoslick \
         github.com/twitchtv/twirp/protoc-gen-twirp \
-        github.com/chrusty/protoc-gen-jsonschema \
+        github.com/chrusty/protoc-gen-jsonschema/cmd/protoc-gen-jsonschema \
         github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger \
         github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway \
         github.com/johanbrandhorst/protobuf/protoc-gen-gopherjs \
         github.com/ckaznocha/protoc-gen-lint \
         github.com/mwitkow/go-proto-validators/protoc-gen-govalidators \
-        github.com/lyft/protoc-gen-validate \
+        github.com/envoyproxy/protoc-gen-validate \
         moul.io/protoc-gen-gotemplate \
         github.com/micro/protoc-gen-micro \
-        && (cd ${GOPATH}/src/github.com/lyft/protoc-gen-validate && make build) \
+        && (cd ${GOPATH}/src/github.com/envoyproxy/protoc-gen-validate && make build) \
         && install -c ${GOPATH}/bin/protoc-gen* ${OUTDIR}/usr/bin/
 
 RUN mkdir -p ${GOPATH}/src/github.com/pseudomuto/protoc-gen-doc && \
@@ -144,6 +144,7 @@ RUN upx --lzma \
         /out/usr/bin/grpc_* \
         /out/usr/bin/protoc-gen-*
 
+# Main Stage
 FROM alpine:3.7
 RUN apk add --no-cache libstdc++
 COPY --from=packer /out/ /
@@ -154,6 +155,10 @@ RUN for p in protoc-gen-swift protoc-gen-swiftgrpc; do \
         done
 COPY --from=javalite_builder /protoc-gen-javalite /protoc-gen-javalite
 RUN ln -s /protoc-gen-javalite/protoc-gen-javalite /usr/bin/protoc-gen-javalite
+
+# Add mypy-protobuf and grpclib
+RUN apk add python3
+RUN pip3 install mypy-protobuf grpclib
 
 RUN apk add --no-cache curl && \
         mkdir -p /protobuf/google/protobuf && \
