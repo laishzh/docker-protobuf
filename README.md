@@ -35,13 +35,13 @@ All inclusive protoc suite, powered by Docker and Alpine Linux.
 
 ## Usage
 ```
-$ docker run --rm znly/protoc --help
+$ docker run --rm laishzh/protoc --help
 Usage: /usr/bin/protoc [OPTION] PROTO_FILES
 ```
 
 Don't forget you need to bind mount your files:
 ```
-$ docker run --rm -v $(pwd):$(pwd) -w $(pwd) znly/protoc --python_out=. -I. myfile.proto
+$ docker run --rm -v $(pwd):$(pwd) -w $(pwd) laishzh/protoc --python_out=. -I. myfile.proto
 ```
 
 ## Google Well Known Types
